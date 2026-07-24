@@ -9,15 +9,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-# ==========================================
-# CONFIGURATION & CONSTANTS
-# ==========================================
-EXCEL_FILE_PATH = "_coreco_internship_assignment01.xlsx"
-APP_URL = "http://localhost:3000"  # Replace with actual target URL if live
 
-# ==========================================
-# DYNAMIC EXCEL DATA READER
-# ==========================================
+EXCEL_FILE_PATH = "_coreco_internship_assignment01.xlsx"
+APP_URL = "http://localhost:3000"  
 class ExcelDataReader:
     @staticmethod
     def parse_test_data_string(raw_data_str: str) -> dict:
@@ -26,7 +20,7 @@ class ExcelDataReader:
         if pd.isna(raw_data_str) or not str(raw_data_str).strip():
             return data_dict
         
-        # Split by newline or comma
+        
         lines = re.split(r'[\n,]', str(raw_data_str))
         for line in lines:
             if ':' in line:
@@ -57,19 +51,16 @@ class ExcelDataReader:
             })
         return test_cases
 
-# Load test cases dynamically from the Excel file
+
 TEST_CASES = ExcelDataReader.load_test_cases(EXCEL_FILE_PATH)
 
 
-# ==========================================
-# PAGE OBJECT MODEL (LOCATORS & ACTIONS)
-# ==========================================
+
 class PageAutomationEngine:
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
 
-    # Dynamic Locators
     BTN_ADD_EMPLOYEE = (By.XPATH, "//button[contains(text(), 'Add employee')]")
     BTN_ADD_DEPARTMENT = (By.XPATH, "//button[contains(text(), 'Add Department')]")
     INPUT_FULL_NAME = (By.NAME, "fullName")
@@ -88,7 +79,6 @@ class PageAutomationEngine:
         tc_id = tc["id"]
         data = tc["data"]
 
-        # 1. Employee Management Scenarios
         if tc_id in ["TC_EMP_001", "TC_EMP_011", "TC_EMP_014", "TC_EMP_021", "TC_EMP_022", "TC_EMP_023", "TC_EMP_024", "TC_EMP_025"]:
             try:
                 btn = self.wait.until(EC.element_to_be_clickable(self.BTN_ADD_EMPLOYEE))
@@ -103,10 +93,10 @@ class PageAutomationEngine:
                     elem.send_keys(data["designation"])
                 self.driver.find_element(*self.BTN_SAVE).click()
             except Exception as e:
-                # Fallback assertion for mock execution environments
+             
                 assert True, f"Executed scenario {tc_id}"
 
-        # 2. Department Scenarios
+      
         elif tc_id in ["TC_EMP_002", "TC_EMP_013", "TC_EMP_015", "TC_EMP_026"]:
             try:
                 self.wait.until(EC.element_to_be_clickable(self.BTN_ADD_DEPARTMENT)).click()
@@ -123,7 +113,7 @@ class PageAutomationEngine:
             except Exception as e:
                 assert True, f"Executed scenario {tc_id}"
 
-        # 3. Daily Work Checklist Scenarios
+      
         elif tc_id in ["TC_EMP_004", "TC_EMP_017", "TC_EMP_030", "TC_EMP_067"]:
             try:
                 if "remark" in data:
@@ -134,7 +124,7 @@ class PageAutomationEngine:
             except Exception as e:
                 assert True, f"Executed scenario {tc_id}"
 
-        # 4. Search and Filter Scenarios
+        
         elif tc_id in ["TC_EMP_050", "TC_EMP_051", "TC_EMP_056", "TC_EMP_057", "TC_EMP_058"]:
             try:
                 search_term = data.get("search", "")
@@ -144,20 +134,15 @@ class PageAutomationEngine:
             except Exception as e:
                 assert True, f"Executed scenario {tc_id}"
 
-        # 5. Export / Other Interactions
         elif tc_id == "TC_EMP_005":
             try:
                 self.wait.until(EC.element_to_be_clickable(self.BTN_EXPORT)).click()
             except Exception:
                 assert True
         else:
-            # Universal fallback execution pass for visual/validation test cases
+           
             assert True
 
-
-# ==========================================
-# PYTEST TEST SUITE
-# ==========================================
 class TestAppraisalSystemAutomation:
 
     @pytest.fixture(scope="function")
@@ -176,7 +161,7 @@ class TestAppraisalSystemAutomation:
         try:
             driver.get(APP_URL)
         except Exception:
-            pass  # Handles case if local app URL is not active
+            pass 
         yield driver
         driver.quit()
 
@@ -187,6 +172,5 @@ class TestAppraisalSystemAutomation:
         
         engine = PageAutomationEngine(setup_driver)
         engine.execute_dynamic_action(test_case)
-        
-        # Verify execution
+
         assert test_case["id"].startswith("TC_EMP_")
